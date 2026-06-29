@@ -1,43 +1,66 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
+
 const app = express();
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
-// Proxy TMDB API
-app.get('/tmdb/*', async (req, res) => {
-  try {
-    const tmdbPath = req.params[0];
-    const query = req.query;
+// Home
+app.get("/", (req, res) => {
+  res.json({
+    status: "TMDB Proxy Running 🚀",
+  });
+});
 
-    const response = await axios.get(`${TMDB_BASE_URL}/${tmdbPath}`, {
-      params: {
-        ...query,
-        api_key: TMDB_API_KEY,
-      },
-    });
+// TMDB Proxy
+app.use("/tmdb", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${TMDB_BASE_URL}${req.originalUrl.replace("/tmdb", "")}`,
+      {
+        params: {
+          ...req.query,
+          api_key: TMDB_API_KEY,
+        },
+      }
+    );
 
     res.json(response.data);
   } catch (error) {
-    res.status(error.response?.status || 500).json({ error: 'TMDB fetch failed' });
+    console.error(error.response?.data || error.message);
+
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || "TMDB fetch failed",
+    });
   }
 });
 
-// Proxy TMDB Images
-app.get('/image/*', async (req, res) => {
+// Image Proxy
+app.use("/image", async (req, res) => {
   try {
-    const imagePath = req.params[0];
+    const imagePath = req.originalUrl.replace("/image/", "");
+
     const response = await axios.get(
       `https://image.tmdb.org/t/p/${imagePath}`,
-      { responseType: 'arraybuffer' }
+      {
+        responseType: "arraybuffer",
+      }
     );
-    res.set('Content-Type', response.headers['content-type']);
+
+    res.set("Content-Type", response.headers["content-type"]);
     res.send(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Image fetch failed' });
+    console.error(error.message);
+
+    res.status(500).json({
+      error: "Image fetch failed",
+    });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Proxy running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Proxy running on port ${PORT}`);
+});

@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.get("/", (req, res) => {
     status: "TMDB Proxy Running 🚀",
   });
 });
+
+app.use(cors());
 
 // TMDB Proxy
 app.use("/tmdb", async (req, res) => {

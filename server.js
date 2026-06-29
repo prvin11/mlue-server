@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
 app.use("/tmdb", async (req, res) => {
   try {
     const response = await axios.get(
-      `${TMDB_BASE_URL}${req.originalUrl.replace("/tmdb", "")}`,
+      `${TMDB_BASE_URL}${req.path.replace("/tmdb", "")}`,
       {
         params: {
           ...req.query,
